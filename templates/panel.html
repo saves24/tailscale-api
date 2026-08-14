@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tailscale Devices</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="bg-layer" id="bgLayer"></div>
+<div class="bg-overlay" id="bgOverlay"></div>
+
+<div class="top-btns">
+<div class="btn-wrap">
+<button class="theme-btn" id="themeBtn" onclick="toggleThemeMenu()">
+    <span id="themeIcon"></span>
+    <span id="themeLabel" data-i18n="theme-auto">自动</span>
+</button>
+<div class="menu theme-menu" id="themeMenu">
+    <div class="menu-item" data-theme="auto" onclick="selectTheme('auto')" data-i18n="theme-auto">自动</div>
+    <div class="menu-item" data-theme="system" onclick="selectTheme('system')" data-i18n="theme-system">跟随系统</div>
+    <div class="menu-item" data-theme="light" onclick="selectTheme('light')" data-i18n="theme-light">白天</div>
+    <div class="menu-item" data-theme="dark" onclick="selectTheme('dark')" data-i18n="theme-dark">夜间</div>
+</div>
+</div>
+
+<div class="btn-wrap">
+<button class="lang-btn" id="langBtn" onclick="toggleLangMenu()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+    <span id="langLabel" data-i18n="lang-label">中文</span>
+</button>
+<div class="menu lang-menu" id="langMenu">
+    <div class="menu-item" data-lang="zh" onclick="selectLang('zh')">中文</div>
+    <div class="menu-item" data-lang="en" onclick="selectLang('en')">English</div>
+    <div class="menu-item" data-lang="ru" onclick="selectLang('ru')">Русский</div>
+</div>
+</div>
+
+<div class="btn-wrap">
+<button class="bg-btn" id="bgBtn" onclick="toggleBgPanel()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+    <span data-i18n="bg">背景</span>
+</button>
+</div>
+</div>
+
+<div class="bg-panel" id="bgPanel">
+    <h3 data-i18n="bg-title">更换背景</h3>
+    <label class="file-label">
+        <input type="file" id="bgFile" accept="image/*" onchange="handleBgFile(this)">
+        <span data-i18n="bg-choose">📁 选择图片</span>
+    </label>
+    <div id="bgFileName" class="file-name"></div>
+    <label><span data-i18n="bg-opacity-label">透明度</span>: <span id="bgOpacityLabel">85%</span></label>
+    <input type="range" id="bgOpacity" min="30" max="100" value="85" oninput="setBgOpacity(this.value)">
+    <label class="card-trans-label">
+        <input type="checkbox" id="cardTrans" onchange="toggleCardTrans(this)"> <span data-i18n="bg-card-trans">卡片透明</span>
+    </label>
+    <div class="bg-actions">
+        <button onclick="removeBg()"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg><span data-i18n="bg-remove">移除背景</span></button>
+    </div>
+</div>
+
+<div class="header">
+    <h1><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="vertical-align:-4px;margin-right:6px;"><path d="M3.9 12c0-1.7 1.4-3.1 3.1-3.1h4V7H7c-2.8 0-5 2.2-5 5s2.2 5 5 5h4v-1.9H7c-1.7 0-3.1-1.4-3.1-3.1zm4.1 1h8v-2H8v2zm9-6h-4v1.9h4c1.7 0 3.1 1.4 3.1 3.1s-1.4 3.1-3.1 3.1h-4V17h4c2.8 0 5-2.2 5-5s-2.2-5-5-5z"/></svg> Tailscale Devices</h1>
+    <div class="stats">
+        <div class="stat"><div class="number">{{ net.total_devices }}</div><span data-i18n="devices">设备</span></div>
+        <div class="stat"><div class="number green">{{ net.online }}</div><span data-i18n="online">在线</span></div>
+        <div class="stat"><div class="number gray">{{ net.offline }}</div><span data-i18n="offline">离线</span></div>
+    </div>
+</div>
+
+<div style="position:relative;">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-muted)" style="position:absolute;top:50%;left:16px;transform:translateY(-50%);"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+    <input class="search" id="search" placeholder="🔍 搜索设备..." onkeyup="searchDevice()" style="padding-left:42px;" data-i18n-placeholder="search-placeholder">
+</div>
+
+<div class="section"><span class="dot dot-green"></span> <span data-i18n="online-devices">在线设备</span></div>
+<div class="grid" id="online">
+{% for d in devices %}{% if d.online %}
+<div class="card device">
+    <div class="title online">
+        {{ d.icon | safe }} {{ d.name }}
+        {% if d.self %}<span style="font-size:12px;color:#2563eb;" data-i18n="self-label">(本机)</span>{% endif %}
+    </div>
+    <div class="info"><span data-i18n="os-label">系统</span>: {{ d.os }}</div>
+    {% if d.dns %}<div class="info"><span data-i18n="domain-label">域名</span>: {{ d.dns }}</div>{% endif %}
+    <div class="info ip" onclick="copyIP('{{ d.ip }}')">IP: {{ d.ip }}</div>
+    {% if d.ipv6 %}<div class="info ip" style="font-size:12px;" onclick="copyIP('{{ d.ipv6 }}')">IPv6: {{ d.ipv6 }}</div>{% endif %}
+    <div class="info"><span data-i18n="status-label">状态</span>: <span data-i18n="online">在线</span></div>
+    <button class="ping-btn" onclick="pingDevice('{{ d.ip }}', this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M12 7a5 5 0 0 0-5 5h2a3 3 0 0 1 6 0h2a5 5 0 0 0-5-5zm0 4a1 1 0 0 0-1 1v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1zM5.6 9.6A8 8 0 0 0 4 14h2a6 6 0 0 1 12 0h2a8 8 0 0 0-14.4-4.4zM12 2a12 12 0 0 0-8.5 3.6l1.4 1.4A10 10 0 0 1 12 4a10 10 0 0 1 7.1 3l1.4-1.4A12 12 0 0 0 12 2z"/></svg><span data-i18n="ping-btn">测试连通性</span></button>
+    <div class="ping-result"></div>
+    <div class="badge online-badge"><span data-i18n="online">在线</span></div>
+</div>
+{% endif %}{% endfor %}
+</div>
+
+<div class="section" onclick="toggleOffline()" style="cursor:pointer">
+    <span class="dot dot-gray"></span> <span data-i18n="offline-devices">离线设备</span> ({{ net.offline }}) ▼</div>
+<div class="grid" id="offline" style="display:none">
+{% for d in devices %}{% if not d.online %}
+<div class="card device">
+    <div class="title offline">
+        {{ d.icon | safe }} {{ d.name }}
+    </div>
+    <div class="info"><span data-i18n="os-label">系统</span>: {{ d.os }}</div>
+    {% if d.dns %}<div class="info"><span data-i18n="domain-label">域名</span>: {{ d.dns }}</div>{% endif %}
+    <div class="info ip" onclick="copyIP('{{ d.ip }}')">IP: {{ d.ip }}</div>
+    {% if d.ipv6 %}<div class="info ip" style="font-size:12px;" onclick="copyIP('{{ d.ipv6 }}')">IPv6: {{ d.ipv6 }}</div>{% endif %}
+    <div class="info"><span data-i18n="last-seen-label">最后在线</span>: {{ d.last_seen }}</div>
+    <button class="ping-btn" onclick="pingDevice('{{ d.ip }}', this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M12 7a5 5 0 0 0-5 5h2a3 3 0 0 1 6 0h2a5 5 0 0 0-5-5zm0 4a1 1 0 0 0-1 1v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1zM5.6 9.6A8 8 0 0 0 4 14h2a6 6 0 0 1 12 0h2a8 8 0 0 0-14.4-4.4zM12 2a12 12 0 0 0-8.5 3.6l1.4 1.4A10 10 0 0 1 12 4a10 10 0 0 1 7.1 3l1.4-1.4A12 12 0 0 0 12 2z"/></svg><span data-i18n="ping-btn">测试连通性</span></button>
+    <div class="ping-result"></div>
+    <div class="badge offline-badge"><span data-i18n="offline">离线</span></div>
+</div>
+{% endif %}{% endfor %}
+</div>
+
+<div class="toast" id="toast">已复制</div>
+
+<script src="/static/js/panel.js"></script>
+
+</body>
+</html>

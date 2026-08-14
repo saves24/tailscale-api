@@ -1,0 +1,17 @@
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 历史备份文件
+*.bak*
+*.stable-final
+*.monolithic-backup
+
+# 环境变量/密钥
+.env
+*.env
+
+# 编译产物/打包文件
+target/
+*.tar
+bin/

@@ -1,0 +1,19 @@
+[package]
+name = "tailscale-api"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+tower-http = { version = "0.5", features = ["fs"] }
+chrono = "0.4"
+regex = "1"
+
+# 静态链接 musl (scratch/alpine 都能跑)
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "s"

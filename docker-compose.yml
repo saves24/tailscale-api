@@ -1,0 +1,22 @@
+# Tailscale 设备状态面板 - Docker Compose 配置 (Rust 版)
+services:
+  tailscale-api:
+    image: ghcr.io/saves24/tailscale-api:latest
+    container_name: tailscale-api
+    # host 网络: 容器可直接读宿主接口 (/proc/net/dev) 实现流量监控
+    network_mode: host
+    environment:
+      # 服务端口 (可选, 默认 8091)
+      - PORT=8091
+      # tailscaled socket 路径 (可选, 默认 /var/run/tailscale/tailscaled.sock)
+      - SOCKET_PATH=/var/run/tailscale/tailscaled.sock
+    volumes:
+      # 挂载宿主 tailscaled socket (读取 Tailscale 状态)
+      - /var/run/tailscale:/var/run/tailscale
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8091/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
